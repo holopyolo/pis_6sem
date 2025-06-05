@@ -8,57 +8,57 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 from scipy.spatial.distance import pdist, squareform
 
-# 1. ГЕНЕРАЦИЯ И ПРЕДОБРАБОТКА ДАННЫХ
+
 np.random.seed(42)
 
-# Параметр количества компаний
-n = 100  # Можно изменить на любое желаемое количество
 
-# Определяем типы компаний с уникальными параметрами распределения
+n = 100  
+
+
 company_types = {
     'Tech_Growth': {
-        'count': n // 5,  # 20% компаний
-        'return_params': (0.20, 0.08),  # очень высокая доходность, меньший разброс
-        'volatility_params': (0.45, 0.08),  # очень высокая волатильность
-        'marketcap_params': (11.5, 0.4),  # очень крупные компании
-        'pe_params': (45, 8),  # очень высокий P/E
-        'dividend_params': (0.003, 0.002)  # очень низкие дивиденды
+        'count': n // 5,  
+        'return_params': (0.20, 0.08),  
+        'volatility_params': (0.45, 0.08),  
+        'marketcap_params': (11.5, 0.4),  
+        'pe_params': (45, 8),  
+        'dividend_params': (0.003, 0.002)  
     },
     'Traditional_Banks': {
         'count': n // 5,
-        'return_params': (0.06, 0.06),  # низкая стабильная доходность
-        'volatility_params': (0.15, 0.04),  # низкая волатильность
-        'marketcap_params': (10.2, 0.3),  # средняя капитализация
-        'pe_params': (8, 3),  # очень низкий P/E
-        'dividend_params': (0.055, 0.010)  # очень высокие дивиденды
+        'return_params': (0.06, 0.06),  
+        'volatility_params': (0.15, 0.04),  
+        'marketcap_params': (10.2, 0.3),  
+        'pe_params': (8, 3),  
+        'dividend_params': (0.055, 0.010)  
     },
     'Oil_Energy': {
         'count': n // 5,
-        'return_params': (0.02, 0.25),  # очень волатильная доходность, может быть отрицательной
-        'volatility_params': (0.55, 0.10),  # экстремально высокая волатильность
-        'marketcap_params': (9.8, 0.8),  # средняя капитализация
-        'pe_params': (12, 4),  # низкий P/E
-        'dividend_params': (0.065, 0.015)  # очень высокие дивиденды
+        'return_params': (0.02, 0.25),  
+        'volatility_params': (0.55, 0.10),  
+        'marketcap_params': (9.8, 0.8),  
+        'pe_params': (12, 4),  
+        'dividend_params': (0.065, 0.015)  
     },
     'Healthcare': {
         'count': n // 5,
-        'return_params': (0.12, 0.05),  # стабильная умеренная доходность
-        'volatility_params': (0.12, 0.03),  # очень низкая волатильность
-        'marketcap_params': (11.0, 0.3),  # крупная капитализация
-        'pe_params': (28, 5),  # высокий P/E
-        'dividend_params': (0.018, 0.005)  # низкие дивиденды
+        'return_params': (0.12, 0.05),  
+        'volatility_params': (0.12, 0.03),  
+        'marketcap_params': (11.0, 0.3),  
+        'pe_params': (28, 5),  
+        'dividend_params': (0.018, 0.005)  
     },
     'Utilities': {
-        'count': n - 4 * (n // 5),  # остальные компании
-        'return_params': (0.04, 0.03),  # очень низкая стабильная доходность
-        'volatility_params': (0.08, 0.02),  # минимальная волатильность
-        'marketcap_params': (9.2, 0.25),  # меньшая капитализация
-        'pe_params': (15, 3),  # умеренный P/E
-        'dividend_params': (0.08, 0.012)  # максимальные дивиденды
+        'count': n - 4 * (n // 5),  
+        'return_params': (0.04, 0.03),  
+        'volatility_params': (0.08, 0.02),  
+        'marketcap_params': (9.2, 0.25),  
+        'pe_params': (15, 3),  
+        'dividend_params': (0.08, 0.012)  
     }
 }
 
-# Генерируем данные по группам
+
 data = []
 company_counter = 1
 
@@ -79,34 +79,34 @@ for group_name, params in company_types.items():
 
 df = pd.DataFrame(data)
 
-# Предобработка: чистка и нормализация
+
 print("Исходные данные:")
 print(df.head())
 print(f"Пропуски: {df.isnull().sum().sum()}")
 
-# Убираем отрицательные значения где не должно быть
+
 df['Volatility'] = df['Volatility'].abs()
 df['MarketCap'] = df['MarketCap'].abs() 
 df['PE_Ratio'] = df['PE_Ratio'].abs()
 df['Dividend'] = df['Dividend'].abs()
 
-# Готовим данные для кластеризации
+
 features = ['Return', 'Volatility', 'MarketCap', 'PE_Ratio', 'Dividend']
 X = df[features]
 
-# Стандартизация
+
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
 print(f"Данные подготовлены: {X.shape}")
 
-# Анализ разделимости групп
+
 print("\n=== АНАЛИЗ РАЗДЕЛИМОСТИ ГРУПП ===")
 group_means = df.groupby('Group')[features].mean()
 print("Средние значения по группам:")
 print(group_means.round(3))
 
-# Рассчитываем расстояния между центрами групп
+
 group_distances = pdist(group_means.values, metric='euclidean')
 distance_matrix = squareform(group_distances)
 
@@ -114,15 +114,15 @@ print(f"\nМинимальное расстояние между группам�
 print(f"Максимальное расстояние между группами: {group_distances.max():.3f}")
 print(f"Среднее расстояние между группами: {group_distances.mean():.3f}")
 
-# 2. ВИЗУАЛИЗАЦИЯ И АНАЛИЗ КЛАСТЕРОВ
 
-# Корреляции
+
+
 plt.figure(figsize=(12, 8))
 plt.subplot(2, 3, 1)
 sns.heatmap(X.corr(), annot=True, cmap='coolwarm')
 plt.title('Корреляция признаков')
 
-# PCA для визуализации
+
 print(X_scaled.shape, ': \tX_scaled.shape')
 pca = PCA(n_components=2)
 X_pca = pca.fit_transform(X_scaled)
@@ -133,7 +133,7 @@ plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.1%})')
 plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.1%})')
 plt.title('PCA компоненты')
 
-# Метод локтя
+
 inertias = []
 K = range(1, 8)
 for k in K:
@@ -147,7 +147,7 @@ plt.xlabel('Количество кластеров')
 plt.ylabel('Инерция')
 plt.title('Метод локтя')
 
-# Silhouette анализ
+
 silhouette_scores = []
 for k in range(2, 8):
     kmeans = KMeans(n_clusters=k, random_state=42)
@@ -164,17 +164,17 @@ plt.title('Качество кластеризации')
 optimal_k = range(2, 8)[np.argmax(silhouette_scores)]
 print(f"Оптимальное количество кластеров: {optimal_k}")
 
-# 3. КЛАСТЕРИЗАЦИЯ
 
-# K-means
+
+
 kmeans = KMeans(n_clusters=optimal_k, random_state=42)
 kmeans_labels = kmeans.fit_predict(X_scaled)
 
-# DBSCAN
+
 dbscan = DBSCAN(eps=0.8, min_samples=3)
 dbscan_labels = dbscan.fit_predict(X_scaled)
 
-# Визуализация результатов
+
 plt.subplot(2, 3, 5)
 plt.scatter(X_pca[:, 0], X_pca[:, 1], c=kmeans_labels, cmap='viridis', alpha=0.8)
 plt.title(f'K-means ({optimal_k} кластеров)')
@@ -188,10 +188,10 @@ plt.xlabel('PC1')
 plt.tight_layout()
 plt.show()
 
-# Дополнительная визуализация реальных групп
+
 plt.figure(figsize=(15, 5))
 
-# Реальные группы
+
 plt.subplot(1, 3, 1)
 group_colors = {'Tech_Growth': 0, 'Traditional_Banks': 1, 'Oil_Energy': 2, 'Healthcare': 3, 'Utilities': 4}
 real_group_labels = [group_colors[group] for group in df['Group']]
@@ -200,16 +200,16 @@ plt.title('Реальные группы компаний')
 plt.xlabel('PC1')
 plt.ylabel('PC2')
 
-# K-means результаты
+
 plt.subplot(1, 3, 2)
 plt.scatter(X_pca[:, 0], X_pca[:, 1], c=kmeans_labels, cmap='viridis', alpha=0.8)
 plt.title(f'K-means кластеры')
 plt.xlabel('PC1')
 
-# Сравнение центроидов
+
 plt.subplot(1, 3, 3)
 plt.scatter(X_pca[:, 0], X_pca[:, 1], c=kmeans_labels, cmap='viridis', alpha=0.3)
-# Добавляем центроиды кластеров
+
 centroids_pca = pca.transform(kmeans.cluster_centers_)
 plt.scatter(centroids_pca[:, 0], centroids_pca[:, 1], c='red', marker='x', s=200, linewidths=3)
 plt.title('K-means с центроидами')
@@ -218,35 +218,35 @@ plt.xlabel('PC1')
 plt.tight_layout()
 plt.show()
 
-# 4. ИНТЕРПРЕТАЦИЯ КЛАСТЕРОВ
+
 
 df['Cluster'] = kmeans_labels
 
 print("\n=== АНАЛИЗ КЛАСТЕРОВ ===")
 
-# Характеристики каждого кластера
+
 for cluster in range(optimal_k):
     cluster_data = df[df['Cluster'] == cluster]
     print(f"\nКластер {cluster} ({len(cluster_data)} компаний):")
     print(f"Компании: {', '.join(cluster_data['Company'].head(5).tolist())}{'...' if len(cluster_data) > 5 else ''}")
     
-    # Средние значения
+    
     means = cluster_data[features].mean()
     print("Характеристики:")
     for feature in features:
         print(f"  {feature}: {means[feature]:.3f}")
     
-    # Показываем распределение по реальным группам
+    
     group_distribution = cluster_data['Group'].value_counts()
     print("Состав по типам компаний:")
     for group, count in group_distribution.items():
         percentage = (count / len(cluster_data)) * 100
         print(f"  {group}: {count} ({percentage:.1f}%)")
 
-# Анализ качества кластеризации относительно реальных групп
+
 print("\n=== СРАВНЕНИЕ С РЕАЛЬНЫМИ ГРУППАМИ ===")
 
-# Показываем как реальные группы распределились по кластерам
+
 for group in company_types.keys():
     group_data = df[df['Group'] == group]
     cluster_distribution = group_data['Cluster'].value_counts().sort_index()
@@ -255,13 +255,13 @@ for group in company_types.keys():
         percentage = (count / len(group_data)) * 100
         print(f"  Кластер {cluster}: {count} компаний ({percentage:.1f}%)")
 
-# Простая интерпретация
+
 print("\n=== ИНТЕРПРЕТАЦИЯ ===")
 for cluster in range(optimal_k):
     cluster_data = df[df['Cluster'] == cluster]
     means = cluster_data[features].mean()
     
-    # Определяем тип кластера
+    
     if means['Return'] > 0.1 and means['Volatility'] > 0.3:
         cluster_type = "Агрессивные акции роста"
     elif means['Dividend'] > 0.025:
@@ -273,7 +273,7 @@ for cluster in range(optimal_k):
     
     print(f"Кластер {cluster}: {cluster_type}")
 
-# Профиль кластеров
+
 plt.figure(figsize=(10, 6))
 for cluster in range(optimal_k):
     cluster_means = df[df['Cluster'] == cluster][features].mean()
@@ -290,10 +290,10 @@ plt.show()
 
 print(f"\nSilhouette Score: {silhouette_score(X_scaled, kmeans_labels):.3f}")
 
-# Дополнительные метрики
+
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
-# Сравниваем с реальными группами
+
 real_labels = [group_colors[group] for group in df['Group']]
 ari_score = adjusted_rand_score(real_labels, kmeans_labels)
 nmi_score = normalized_mutual_info_score(real_labels, kmeans_labels)
@@ -302,11 +302,11 @@ print(f"Adjusted Rand Index: {ari_score:.3f}")
 print(f"Normalized Mutual Information: {nmi_score:.3f}")
 print("Кластеризация завершена!")
 
-# Сохраняем результаты
+
 df.to_csv('financial_clusters.csv', index=False)
 print("Результаты сохранены в 'financial_clusters.csv'")
 
-# Сохраняем сводку по группам
+
 summary_data = []
 for group in company_types.keys():
     group_data = df[df['Group'] == group]

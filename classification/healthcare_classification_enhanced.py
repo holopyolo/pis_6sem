@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 import warnings
+from catboost import CatBoostClassifier
 warnings.filterwarnings('ignore')
 
 # 1. ЗАГРУЗКА И ПЕРВИЧНАЯ ОБРАБОТКА
@@ -91,15 +92,21 @@ lr = LogisticRegression(random_state=42, max_iter=5000)
 lr.fit(X_train, y_train)
 lr_pred = lr.predict(X_test)
 
-# 5. ПРОСТОЙ АНСАМБЛЬ
-print("Создание ансамбля...")
-ensemble_pred = []
-for i in range(len(rf_pred)):
-    # Простое голосование
-    votes = [rf_pred[i], lr_pred[i]]
-    ensemble_pred.append(max(set(votes), key=votes.count))
+# Модель 3: CatBoostClassifier
+cat_features_idx = [X.columns.get_loc(col) for col in categorical_cols if col in X.columns]
+cb = CatBoostClassifier(verbose=0, random_state=42)
+cb.fit(X_train, y_train, cat_features=cat_features_idx)
+cb_pred = cb.predict(X_test)
 
-ensemble_pred = np.array(ensemble_pred)
+# 5. ПРОСТОЙ АНСАМБЛЬ
+# print("Создание ансамбля...")
+# ensemble_pred = []
+# for i in range(len(rf_pred)):
+#     # Простое голосование
+#     votes = [rf_pred[i], lr_pred[i], cb_pred[i]]
+#     ensemble_pred.append(max(set(votes), key=votes.count))
+
+# ensemble_pred = np.array(ensemble_pred)
 
 # 6. ОЦЕНКА КАЧЕСТВА
 print("\n=== РЕЗУЛЬТАТЫ ===")
@@ -107,7 +114,8 @@ print("\n=== РЕЗУЛЬТАТЫ ===")
 models = {
     'Random Forest': rf_pred,
     'Logistic Regression': lr_pred,
-    'Simple Ensemble': ensemble_pred
+    'CatBoost': cb_pred,
+    # 'Simple Ensemble': ensemble_pred
 }
 
 best_acc = 0
@@ -136,24 +144,3 @@ importance_df = pd.DataFrame({
 }).sort_values('importance', ascending=False)
 
 print(f"\nВажность признаков:\n{importance_df}")
-
-# 7. БИНАРНАЯ КЛАССИФИКАЦИЯ
-print("\n=== БИНАРНАЯ КЛАССИФИКАЦИЯ (Normal vs Others) ===")
-y_binary = (y == 2).astype(int)  # Normal = 1, остальные = 0
-
-X_train_bin, X_test_bin, y_train_bin, y_test_bin = train_test_split(
-    X_scaled, y_binary, test_size=0.2, random_state=42, stratify=y_binary)
-
-rf_binary = RandomForestClassifier(n_estimators=50, random_state=42)
-rf_binary.fit(X_train_bin, y_train_bin)
-rf_binary_pred = rf_binary.predict(X_test_bin)
-
-acc_binary = accuracy_score(y_test_bin, rf_binary_pred)
-print(f"Бинарная классификация Accuracy: {acc_binary:.3f}")
-
-print("\n=== СВОДКА ===")
-print(f"Многоклассовая классификация: {best_acc:.3f}")
-print(f"Бинарная классификация: {acc_binary:.3f}")
-print(f"Использованные признаки: {len(features_enhanced)}")
-print(f"Обработанные выбросы: {outliers_before}")
-print("Классификация завершена!") 
